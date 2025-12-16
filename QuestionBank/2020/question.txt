@@ -1,0 +1,48 @@
+Problem Statement: Design and simulate a correlated branch predictor using Verilog HDL to
+analyze the prediction accuracy and behavior for a sequence of conditional branches.
+In a two-level correlated predictor, predictions are based on:
+1. Global History Register (GHR) – It stores outcomes (taken/not-taken) of the last 3
+branches.
+2. Pattern History Table (PHT) – It is an array of 2-bit saturating counters (00-Strongly Not
+Taken, 01-Weakly Not Taken, 10-Weakly Taken, 11-Strongly Taken) indexed by the GHR
+pattern.
+After each branch, the predictor updates:
+ The GHR: Shift-in the actual branch outcome. The oldest history bit (Most Significant Bit)
+is dropped, and the actual branch outcome is shifted-in as the new Least Significant Bit.
+ The PHT entry: Increment/Decrement counter based on correctness. If actual branch is
+“Taken” then increment the counter by one to the max of 3 (in decimal). If the actual
+branch is “Not-Taken” then decrement the counter by one to the min of 0 (in decimal).
+The figure below illustrates the block diagram of the correlated branch predictor explained above.
+Note: The PHT and GHR values shown in the figure represent a snapshot of the predictor’s state at
+a particular clock cycle.
+
+Write Verilog code (choose an appropriate level of abstraction for modeling the given problem
+description) for the following modules in a single .v file to implement the correlated branch
+predictor behavior.
+a) GHR [10M]
+A shift register that stores the most recent three branch outcomes and has three-bit (G2-G0)
+output. The GHR is initialized to 000 on the positive edge of the clock when the reset signal is
+asserted (reset = 1). The input bit, i.e., actual branch outcome (in_bit) is shifted into the GHR
+on the positive edge of the clock when the update enable signal (update_en) is active (set to 1).
+b) PHT [14M]
+The PHT is a memory array of size 8 containing 2-bit saturating counters. All counter entries are
+initialized to Weakly Taken (10) on the positive edge of the clock when the reset signal is asserted
+(reset = 1). The PHT output is a 2-bit (P1-P0) counter value indexed by a 3-bit (G2-G0) GHR
+value. When the update_en is active (set to 1), the counter entry indexed by G0-G2 is updated
+(based on actual branch outcome) on the positive edge of the clock.
+c) branch_predictor [14M]
+Integrates GHR and PHT modules to generate predictions, updates the table, and tracks accuracy.
+d) tb_branch_predictor (test bench) [12M]
+The test bench drives a branch trace, collects statistics (hits, misses), and displays per-cycle details.
+Initialize the GHR to binary 000 and set all PHT counter entries to binary 10. You have to consider
+using the following actual branch outcome pattern of 28 branches as a trace in the test bench
+module: (Here T indicates branch taken, and N indicates branch not taken.)
+T T N T N N T T T N N T N T T T N T N N T T T N N T N T
+Your test bench should display the output in the following format:
+[Note: PHT_cnt (PHT counter value), PHT_upd (PHT counter updated value), Pred (Prediction),
+Actual (Actual branch outcome), Statistics (running sum of total no. of predictions and no. of
+correct predictions), ‘Taken’ is represented by binary 1 and ‘Not Taken’ by binary 0]
+Cycle GHR PHT_cnt PHT_upd Pred Actual Statistics
+ 0 000 10 11 1 1 total=1, correct=1
+ 1 001 10 11 1 1 total=2, correct=2
+ 2 011 10 01 1 0 total=3, correct=2
